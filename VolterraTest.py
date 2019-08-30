@@ -110,12 +110,12 @@ ax.set_zlabel(r'$h_2(\tau_1,\tau_2)$')
 #------------REGULARIZATION-------------------------
 v_coords, u_coords = generate_coords(n,n2)
 
-c10 = 1;
-lambda10 = 0.8;
-c20 = 1;
-lambda20 = 0.8;
-lambda30 = 0.8;
-std0 = 0.5*noise_std;
+c10 = 1.1;
+lambda10 = 0.9;
+c20 = 24.5;
+lambda20 = 0.88;
+lambda30 = 0.96;
+std0 = noise_std;
 
 bounds = opt.Bounds([0, 0.3, 0, 0.3, 0.3, 0],[np.inf, 1, np.inf, 1, 1, np.inf])
 x0 = np.array([c10, lambda10, c20, lambda20, lambda30, std0])
@@ -156,3 +156,37 @@ P2 = c2*np.multiply(P2v,P2u)
 P = sc.linalg.block_diag(P1,P2)
 
 #-----------COMPUTE REGULARIZED ESTIMATE------------
+
+#THETA_REG = (P*PHI*PHI' + noise_var*I)^-1 P*PHI*Y
+
+temp = np.matmul(P,PHI)
+temp = np.matmul(temp,np.matrix.transpose(PHI))
+for i in range(0,len(temp)):
+        temp[i,i] = temp[i,i] + noise_var
+
+temp2 = np.matmul(P,PHI)
+temp2 = np.matmul(temp2,Y)
+
+THETA_REG = np.linalg.solve(temp,temp2)
+
+h1_ReLS = THETA_REG[0:n]
+h2_ReLS = THETA_REG[n:]
+h2_ReLS = arrangeKernel2D(h2_ReLS,n)
+
+#-----------Final Plotting------------------------
+
+mp.figure()
+mp.plot(np.arange(0,len(h1_ReLS)),h1_ReLS)
+##mp.show()
+
+fig = mp.figure()
+ax = fig.add_subplot(111, projection='3d')
+x = y = np.arange(0,len(h2_ReLS))
+XX, YY = np.meshgrid(x, y)
+ax.plot_surface(XX, YY, h2_ReLS)
+ax.set_xlabel(r'$\tau_1$')
+ax.set_ylabel(r'$\tau_2$')
+ax.set_zlabel(r'$h_2(\tau_1,\tau_2)$')
+
+mp.show()
+
