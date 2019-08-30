@@ -3,6 +3,7 @@ import matplotlib.pyplot as mp
 from mpl_toolkits.mplot3d import Axes3D
 import time
 import math
+import scipy as sc
 import scipy.signal as sig
 import scipy.optimize as opt
 from SecondOrderStuff import *
