@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as mp
 from mpl_toolkits.mplot3d import Axes3D
+import time
 import math
 import scipy.signal as sig
 import scipy.optimize as opt
@@ -9,7 +10,7 @@ from mpl_toolkits.mplot3d import Axes3D # This import has side effects required 
 
 DataRatio = 1.2;
 TOL = 0.02;
-n = 40;  #size of the kernels
+n = 50;  #size of the kernels
 n1 = n;
 n2 = (n**2+n)/2;
 
@@ -114,10 +115,44 @@ lambda10 = 0.8;
 c20 = 1;
 lambda20 = 0.8;
 lambda30 = 0.8;
-std0 = noise_std;
+std0 = 0.5*noise_std;
 
 bounds = opt.Bounds([0, 0.3, 0, 0.3, 0.3, 0],[np.inf, 1, np.inf, 1, 1, np.inf])
 x0 = np.array([c10, lambda10, c20, lambda20, lambda30, std0])
 
 print('Optimizing regularization hyperparameters...')
-res = opt.minimize(TCfunc, x0, args = (PHI,Y,n,v_coords,u_coords), bounds=bounds)
+start = time.time()
+res = opt.minimize(TCfunc, x0, args = (PHI,Y,n,v_coords,u_coords), bounds=bounds,tol=0.0001)
+end = time.time()
+
+print(end-start)
+
+#-----------FORM FINAL COVARIANCE MATRIX------------
+
+c1 = res.x[0]
+lambda1 = res.x[1]
+c2 = res.x[2]
+lambda2 = res.x[3]
+lambda3 = res.x[4]
+noise_var = res.x[5]**2
+
+P1 = np.zeros((n,n));
+for j in range(0,n):
+    for k in range(0,n):
+        P1[j,k] = c1*(lambda1**(max(j,k)))
+
+P2v = np.zeros((n2,n2));
+P2u = np.zeros((n2,n2));
+
+for j in range(0,n2):
+    for k in range(j,n2):
+        P2v[j,k] = lambda2**(max(v_coords[j],v_coords[k]))
+        P2v[k,j] = P2v[j,k]
+        P2u[j,k] = lambda3**(max(u_coords[j],u_coords[k]))
+        P2u[k,j] = P2u[j,k]
+
+P2 = c2*np.multiply(P2v,P2u)
+
+P = sc.linalg.block_diag(P1,P2)
+
+#-----------COMPUTE REGULARIZED ESTIMATE------------

@@ -81,13 +81,9 @@ def TCfunc(x, PHI, Y, n, v_coords, u_coords):
 ##    Rd = np.linalg.qr(np.c_[np.matrix.transpose(PHI),Y])
     SIGY = np.matmul(np.matrix.transpose(PHI),P) #0.2 secs @n=40
 
-    start = time.time()
     SIGY = np.matmul(SIGY,PHI)#0.7 secs
     for i in range(0,len(SIGY)):
         SIGY[i,i] = SIGY[i,i] + noise_var
-    end = time.time()
-
-    print(end-start)
     
     (sign,logdet) = np.linalg.slogdet(SIGY) #0.75 secs
     
