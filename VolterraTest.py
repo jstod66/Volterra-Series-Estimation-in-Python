@@ -7,9 +7,9 @@ import scipy.optimize as opt
 from SecondOrderStuff import *
 from mpl_toolkits.mplot3d import Axes3D # This import has side effects required for the kwarg projection='3d' in the call to fig.add_subplot
 
-DataRatio = 3;
+DataRatio = 1.2;
 TOL = 0.02;
-n = 60;  #size of the kernels
+n = 40;  #size of the kernels
 n1 = n;
 n2 = (n**2+n)/2;
 
@@ -98,26 +98,26 @@ mp.plot(np.arange(0,len(h1_LS)),h1_LS)
 fig = mp.figure()
 ax = fig.add_subplot(111, projection='3d')
 x = y = np.arange(0,len(h2_LS))
-X, Y = np.meshgrid(x, y)
-ax.plot_surface(X, Y, h2_LS)
+XX, YY = np.meshgrid(x, y)
+ax.plot_surface(XX, YY, h2_LS)
 ax.set_xlabel(r'$\tau_1$')
 ax.set_ylabel(r'$\tau_2$')
 ax.set_zlabel(r'$h_2(\tau_1,\tau_2)$')
 
-mp.show()
+#mp.show()
 
 #------------REGULARIZATION-------------------------
-##print('Optimizing regularization hyperparameters')
-##v_coords, u_coords = generate_coords(n,n2)
-##
-##c10 = 1;
-##lambda10 = 0.8;
-##c20 = 1;
-##lambda20 = 0.8;
-##lambda30 = 0.8;
-##std0 = noise_std*1.5;
-##
-##bounds = opt.Bounds([0, 0.3, 0, 0.3, 0.3, 0],[np.inf, 1, np.inf, 1, 1, np.inf])
-##x0 = np.array([c10, lambda10, c20, lambda20, lambda30, std0])
-##
-##res = opt.minimize(TCfunc, x0, args = (PHI,Y,n,v_coords,u_coords), method = 'trust-constr', bounds=bounds)
+v_coords, u_coords = generate_coords(n,n2)
+
+c10 = 1;
+lambda10 = 0.8;
+c20 = 1;
+lambda20 = 0.8;
+lambda30 = 0.8;
+std0 = noise_std;
+
+bounds = opt.Bounds([0, 0.3, 0, 0.3, 0.3, 0],[np.inf, 1, np.inf, 1, 1, np.inf])
+x0 = np.array([c10, lambda10, c20, lambda20, lambda30, std0])
+
+print('Optimizing regularization hyperparameters...')
+res = opt.minimize(TCfunc, x0, args = (PHI,Y,n,v_coords,u_coords), bounds=bounds)

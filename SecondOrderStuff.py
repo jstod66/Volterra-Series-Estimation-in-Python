@@ -45,14 +45,17 @@ def TCfunc(x, PHI, Y, n, v_coords, u_coords):
 
     import numpy as np
     import scipy as sc
+    import time
 
     c1 = x[0]
     lambda1 = x[1]
     c2 = x[2]
     lambda2 = x[3]
     lambda3 = x[4]
-    noise_std = x[5]
+    noise_var = x[5]**2
 
+    
+    #---------Form P (prior covariance)--------------
     P1 = np.zeros((n,n));
     for j in range(0,n):
         for k in range(0,n):
@@ -61,25 +64,42 @@ def TCfunc(x, PHI, Y, n, v_coords, u_coords):
     n2 = (n**2+n)/2;
     P2v = np.zeros((n2,n2));
     P2u = np.zeros((n2,n2));
+
     for j in range(0,n2):
         for k in range(j,n2):
             P2v[j,k] = lambda2**(max(v_coords[j],v_coords[k]))
             P2v[k,j] = P2v[j,k]
             P2u[j,k] = lambda3**(max(u_coords[j],u_coords[k]))
             P2u[k,j] = P2u[j,k]
-
+    
     P2 = c2*np.multiply(P2v,P2u)
-
+    
     P = sc.linalg.block_diag(P1,P2)
+    
+    #-----------------------------------------------(1 sec vast majority in nested for)
 
 ##    Rd = np.linalg.qr(np.c_[np.matrix.transpose(PHI),Y])
-    SIGY = np.matmul(np.matrix.transpose(PHI),P)
-    SIGY = np.matmul(SIGY,PHI) + (noise_std**2)*np.eye(len(Y))
+    SIGY = np.matmul(np.matrix.transpose(PHI),P) #0.2 secs @n=40
 
-    (sign,logdet) = np.linalg.slogdet(SIGY)
-    temp = np.matmul(np.matrix.transpose(Y),np.linalg.inv(SIGY))
+    start = time.time()
+    SIGY = np.matmul(SIGY,PHI)#0.7 secs
+    for i in range(0,len(SIGY)):
+        SIGY[i,i] = SIGY[i,i] + noise_var
+    end = time.time()
+
+    print(end-start)
     
-    return np.matmul(temp,Y) + logdet 
+    (sign,logdet) = np.linalg.slogdet(SIGY) #0.75 secs
+    
+    temp = np.linalg.solve(SIGY,Y) 
+    J = np.matmul(np.matrix.transpose(Y),temp) + logdet #0.8 secs
+    
+    
+    print(J)
+    
+    
+    
+    return J 
 
     
 
